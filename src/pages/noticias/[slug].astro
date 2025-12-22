@@ -1,46 +1,294 @@
 ---
+import Layout from '../../layouts/Layout.astro';
+import { client } from '../../lib/sanity';
+import { NOTICIA_DETALLE_QUERY, NOTICIAS_SLUGS_QUERY } from '../../lib/sanity.queries';
+import type { Noticia, SlugParam } from '../../types/sanity.types';
+import { urlFor } from '../../utils/sanity.utils';
+import { PortableText } from 'astro-portabletext';
+
+// Renderizado estático en build time
 export const prerender = true;
 
-import { client } from '../../lib/sanity';
-import type { Noticia } from '../../types/sanity.types';
-import Layout from '../../layouts/Layout.astro';
-import { urlFor } from './../../utils/sanity.utils'
-import { PortableText } from "astro-portabletext";
-
-
-// 1. Definir qué rutas se deben generar (SSG)
+// 1. Definir rutas estáticas para SSG
 export async function getStaticPaths() {
-  const query = `*[_type == "noticia"]{ "slug": slug.current }`;
-  const noticias = await client.fetch<{ slug: string }[]>(query);
-
-  return noticias.map((noticia) => ({
-    params: { slug: noticia.slug }
+  const slugs = await client.fetch<SlugParam[]>(NOTICIAS_SLUGS_QUERY);
+  
+  return slugs.map((item) => ({
+    params: { slug: item.slug },
   }));
 }
 
-// 2. Obtener la data específica para esta página
+// 2. Obtener datos de la noticia específica
 const { slug } = Astro.params;
-const query = `*[_type == "noticia" && slug.current == $slug][0]`;
-const noticia = await client.fetch<Noticia>(query, { slug });
+
+const noticia = await client.fetch<Noticia | null>(
+  NOTICIA_DETALLE_QUERY,
+  { slug }
+);
 
 if (!noticia) {
   return Astro.redirect('/404');
 }
+
+// Formatear fecha
+const fechaFormateada = new Date(noticia.fechaPublicacion).toLocaleDateString('es-ES', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 ---
 
 <Layout title={noticia.titulo}>
-  <article>
-    <h1>{noticia.titulo}</h1>
-    <time datetime={noticia.fechaPublicacion}>
-      {new Date(noticia.fechaPublicacion).toLocaleDateString('es-ES')}
-    </time>
+  <main class="noticia-detail">
+    <article class="container">
+      <!-- Header -->
+      <header class="noticia-header">
+        <a href="/noticias" class="back-link">
+          ← Volver a Noticias
+        </a>
+        
+        <h1 class="noticia-title">{noticia.titulo}</h1>
+        
+        <div class="noticia-meta">
+          <time datetime={noticia.fechaPublicacion}>
+            {fechaFormateada}
+          </time>
+        </div>
+      </header>
 
-    {noticia.portada && (
-      <img src={urlFor(noticia.portada).url()} alt={noticia.titulo} />
-    )}
+      <!-- Imagen de Portada -->
+      {noticia.portada && (
+        <figure class="portada-figure">
+          <img
+            src={urlFor(noticia.portada).width(1200).height(675).url()}
+            srcset={`
+              ${urlFor(noticia.portada).width(600).height(338).url()} 600w,
+              ${urlFor(noticia.portada).width(1200).height(675).url()} 1200w,
+              ${urlFor(noticia.portada).width(1800).height(1013).url()} 1800w
+            `}
+            sizes="(max-width: 1200px) 100vw, 1200px"
+            alt={noticia.portada.alt || noticia.titulo}
+            class="portada-image"
+          />
+        </figure>
+      )}
 
-    <div class="prose">
-      {Array.isArray(noticia.contenido) && <PortableText value={noticia.contenido} />}
-    </div>
-  </article>
-</BaseLayout>
+      <!-- Contenido (Portable Text) -->
+      <div class="noticia-content prose">
+        <PortableText 
+          value={noticia.contenido}
+          components={{
+            type: {
+              image: ({ value }) => {
+                const imageUrl = urlFor(value).width(800).url();
+                return `
+                  <figure class="content-image">
+                    <img 
+                      src="${imageUrl}"
+                      alt="${value.alt || ''}"
+                      loading="lazy"
+                    />
+                  </figure>
+                `;
+              },
+            },
+            marks: {
+              link: ({ children, value }) => {
+                const rel = value.href.startsWith('http') 
+                  ? 'noopener noreferrer' 
+                  : undefined;
+                const target = value.href.startsWith('http') 
+                  ? '_blank' 
+                  : undefined;
+                const relAttr = rel ? `rel="${rel}"` : '';
+                const targetAttr = target ? `target="${target}"` : '';
+                return `<a href="${value.href}" ${relAttr} ${targetAttr}>${children}</a>`;
+              },
+            },
+          }}
+        />
+      </div>
+
+      <!-- Footer con navegación -->
+      <footer class="noticia-footer">
+        <a href="/noticias" class="btn-secondary">
+          Ver Todas las Noticias
+        </a>
+      </footer>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  .noticia-detail {
+    min-height: 100vh;
+    background: #f9fafb;
+    padding: 2rem 0 4rem;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  /* Header */
+  .noticia-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: #6b7280;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
+    transition: color 0.3s;
+  }
+
+  .back-link:hover {
+    color: #2563eb;
+  }
+
+  .noticia-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 1rem 0;
+    color: #1f2937;
+  }
+
+  .noticia-meta {
+    color: #6b7280;
+    font-size: 1rem;
+  }
+
+  /* Portada */
+  .portada-figure {
+    margin: 2rem 0 3rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .portada-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Contenido (Prose) */
+  .prose {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: #374151;
+  }
+
+  .prose :global(h2) {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 2.5rem 0 1rem;
+    color: #1f2937;
+  }
+
+  .prose :global(h3) {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 2rem 0 0.75rem;
+    color: #1f2937;
+  }
+
+  .prose :global(p) {
+    margin: 1.25rem 0;
+  }
+
+  .prose :global(a) {
+    color: #2563eb;
+    text-decoration: underline;
+  }
+
+  .prose :global(a:hover) {
+    color: #1d4ed8;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 1.25rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .prose :global(li) {
+    margin: 0.5rem 0;
+  }
+
+  .prose :global(blockquote) {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1.5rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: #6b7280;
+  }
+
+  .prose :global(strong) {
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .prose :global(em) {
+    font-style: italic;
+  }
+
+  .prose :global(.content-image) {
+    margin: 2rem 0;
+  }
+
+  .prose :global(.content-image img) {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  /* Footer */
+  .noticia-footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+  }
+
+  .btn-secondary {
+    display: inline-block;
+    padding: 0.875rem 2rem;
+    background: white;
+    color: #2563eb;
+    border: 2px solid #2563eb;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+
+  .btn-secondary:hover {
+    background: #2563eb;
+    color: white;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .noticia-title {
+      font-size: 2rem;
+    }
+
+    .prose {
+      font-size: 1rem;
+    }
+
+    .prose :global(h2) {
+      font-size: 1.5rem;
+    }
+
+    .prose :global(h3) {
+      font-size: 1.25rem;
+    }
+  }
+</style>

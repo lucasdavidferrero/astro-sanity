@@ -1,0 +1,289 @@
+---
+import type { BannerPopulated } from '../types/sanity.types';
+import { urlFor } from '../utils/sanity.utils';
+import { getBannerLinkUrl, shouldOpenInNewTab } from '../types/sanity.types';
+
+interface Props {
+  banners: BannerPopulated[];
+}
+
+const { banners } = Astro.props;
+
+if (!banners || banners.length === 0) {
+  return null;
+}
+---
+
+<div class="carousel-container">
+  <div class="carousel-wrapper">
+    {banners.map((banner, index) => {
+      const linkUrl = getBannerLinkUrl(banner);
+      const openInNewTab = shouldOpenInNewTab(banner.link);
+      const imageUrl = urlFor(banner.imagen).width(1920).height(600).url();
+      const imageSrcSet = `
+        ${urlFor(banner.imagen).width(640).height(200).url()} 640w,
+        ${urlFor(banner.imagen).width(1024).height(320).url()} 1024w,
+        ${urlFor(banner.imagen).width(1920).height(600).url()} 1920w
+      `;
+
+      return (
+        <div 
+          class="carousel-slide" 
+          data-slide={index}
+          data-active={index === 0}
+        >
+          {linkUrl ? (
+            <a
+              href={linkUrl}
+              target={openInNewTab ? '_blank' : undefined}
+              rel={openInNewTab ? 'noopener noreferrer' : undefined}
+              aria-label={`Ver ${banner.titulo}`}
+            >
+              <img
+                src={imageUrl}
+                srcset={imageSrcSet}
+                sizes="100vw"
+                alt={banner.imagen.alt || banner.titulo}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding={index === 0 ? 'sync' : 'async'}
+              />
+            </a>
+          ) : (
+            <img
+              src={imageUrl}
+              srcset={imageSrcSet}
+              sizes="100vw"
+              alt={banner.imagen.alt || banner.titulo}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              decoding={index === 0 ? 'sync' : 'async'}
+            />
+          )}
+        </div>
+      );
+    })}
+  </div>
+
+  {banners.length > 1 && (
+    <>
+      <button class="carousel-btn carousel-btn-prev" aria-label="Banner anterior">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      
+      <button class="carousel-btn carousel-btn-next" aria-label="Siguiente banner">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      <div class="carousel-indicators">
+        {banners.map((_, index) => (
+          <button
+            class="carousel-indicator"
+            data-slide-to={index}
+            aria-label={`Ir al banner ${index + 1}`}
+            aria-current={index === 0}
+          />
+        ))}
+      </div>
+    </>
+  )}
+</div>
+
+<style>
+  .carousel-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    aspect-ratio: 16 / 5;
+    background: #f3f4f6;
+  }
+
+  .carousel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
+  }
+
+  .carousel-slide[data-active="true"] {
+    opacity: 1;
+    z-index: 1;
+  }
+
+  .carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .carousel-slide a {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background 0.3s;
+  }
+
+  .carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .carousel-btn-prev {
+    left: 20px;
+  }
+
+  .carousel-btn-next {
+    right: 20px;
+  }
+
+  .carousel-indicators {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .carousel-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .carousel-indicator[aria-current="true"] {
+    background: white;
+  }
+
+  @media (max-width: 768px) {
+    .carousel-container {
+      aspect-ratio: 16 / 9;
+    }
+
+    .carousel-btn {
+      width: 36px;
+      height: 36px;
+    }
+
+    .carousel-btn-prev {
+      left: 10px;
+    }
+
+    .carousel-btn-next {
+      right: 10px;
+    }
+  }
+</style>
+
+<script>
+  class Carousel {
+    private container: HTMLElement;
+    private slides: NodeListOf<HTMLElement>;
+    private indicators: NodeListOf<HTMLElement>;
+    private currentIndex = 0;
+    private intervalId?: number;
+
+    constructor(container: HTMLElement) {
+      this.container = container;
+      this.slides = container.querySelectorAll('.carousel-slide');
+      this.indicators = container.querySelectorAll('.carousel-indicator');
+      
+      if (this.slides.length <= 1) return;
+
+      this.init();
+    }
+
+    private init() {
+      // Botones de navegación
+      this.container.querySelector('.carousel-btn-prev')?.addEventListener('click', () => this.prev());
+      this.container.querySelector('.carousel-btn-next')?.addEventListener('click', () => this.next());
+
+      // Indicadores
+      this.indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => this.goTo(index));
+      });
+
+      // Auto-play
+      this.startAutoPlay();
+
+      // Pausar en hover
+      this.container.addEventListener('mouseenter', () => this.stopAutoPlay());
+      this.container.addEventListener('mouseleave', () => this.startAutoPlay());
+
+      // Pausar en focus (accesibilidad)
+      this.container.addEventListener('focusin', () => this.stopAutoPlay());
+      this.container.addEventListener('focusout', () => this.startAutoPlay());
+    }
+
+    private goTo(index: number) {
+      // Remover active del slide actual
+      this.slides[this.currentIndex].setAttribute('data-active', 'false');
+      this.indicators[this.currentIndex]?.setAttribute('aria-current', 'false');
+
+      // Activar nuevo slide
+      this.currentIndex = index;
+      this.slides[this.currentIndex].setAttribute('data-active', 'true');
+      this.indicators[this.currentIndex]?.setAttribute('aria-current', 'true');
+    }
+
+    private next() {
+      const nextIndex = (this.currentIndex + 1) % this.slides.length;
+      this.goTo(nextIndex);
+    }
+
+    private prev() {
+      const prevIndex = (this.currentIndex - 1 + this.slides.length) % this.slides.length;
+      this.goTo(prevIndex);
+    }
+
+    private startAutoPlay() {
+      this.intervalId = window.setInterval(() => this.next(), 5000);
+    }
+
+    private stopAutoPlay() {
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+      }
+    }
+  }
+
+  // Inicializar carousels
+  document.addEventListener('astro:page-load', () => {
+    const carousels = document.querySelectorAll('.carousel-container');
+    carousels.forEach(container => new Carousel(container as HTMLElement));
+  });
+</script>
