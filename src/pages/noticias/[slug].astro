@@ -1,0 +1,46 @@
+---
+export const prerender = true;
+
+import { client } from '../../lib/sanity';
+import type { Noticia } from '../../types/sanity.types';
+import Layout from '../../layouts/Layout.astro';
+import { urlFor } from './../../utils/sanity.utils'
+import { PortableText } from "astro-portabletext";
+
+
+// 1. Definir qué rutas se deben generar (SSG)
+export async function getStaticPaths() {
+  const query = `*[_type == "noticia"]{ "slug": slug.current }`;
+  const noticias = await client.fetch<{ slug: string }[]>(query);
+
+  return noticias.map((noticia) => ({
+    params: { slug: noticia.slug }
+  }));
+}
+
+// 2. Obtener la data específica para esta página
+const { slug } = Astro.params;
+const query = `*[_type == "noticia" && slug.current == $slug][0]`;
+const noticia = await client.fetch<Noticia>(query, { slug });
+
+if (!noticia) {
+  return Astro.redirect('/404');
+}
+---
+
+<Layout title={noticia.titulo}>
+  <article>
+    <h1>{noticia.titulo}</h1>
+    <time datetime={noticia.fechaPublicacion}>
+      {new Date(noticia.fechaPublicacion).toLocaleDateString('es-ES')}
+    </time>
+
+    {noticia.portada && (
+      <img src={urlFor(noticia.portada).url()} alt={noticia.titulo} />
+    )}
+
+    <div class="prose">
+      {Array.isArray(noticia.contenido) && <PortableText value={noticia.contenido} />}
+    </div>
+  </article>
+</BaseLayout>
