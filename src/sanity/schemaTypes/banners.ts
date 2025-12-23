@@ -30,7 +30,27 @@ export const banner = defineType({
           validation: (Rule) => Rule.required(),
         },
       ],
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) =>
+        Rule.required().custom(async (value, context) => {
+        // If no image is selected, the 'required()' rule handles it
+        if (!value?.asset?._ref) return true;
+
+        // 1. Define the limit (1MB = 1048576 bytes)
+        const MAX_SIZE = 1024 * 1024; 
+        
+        // 2. Get the Sanity client to fetch asset metadata
+        const client = context.getClient({ apiVersion: import.meta.env.PUBLIC_SANITY_API_VERSION });
+        
+        // 3. Fetch the 'size' property from the asset document
+        const asset = await client.fetch(`*[_id == $id][0]{size}`, { id: value.asset._ref });
+
+        if (asset && asset.size > MAX_SIZE) {
+          const sizeInMb = (asset.size / (1024 * 1024)).toFixed(2);
+          return `La imagen es demasiado pesada (${sizeInMb}MB). El máximo permitido es 1MB.`;
+        }
+
+        return true;
+      }),
     }),
     defineField({
       name: 'posicion',
