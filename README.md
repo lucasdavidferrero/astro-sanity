@@ -1,5 +1,6 @@
 # Prompt
 
+ITERATION 1.
 Actúa como un Senior Fullstack Architect experto en AstroJS, TypeScript, Sanity CMS y Netlify.
 
 Contexto: Estoy desarrollando un sitio web para una institución educativa con presupuesto limitado. El objetivo es minimizar costos usando un enfoque Full SSG desplegado en Netlify.
@@ -24,9 +25,4 @@ Aclaraciones:
 
 
 
-Necesito que analizes este proyecto y me recomiendes artefactos a agregar/modificar.
-- Quiero que este proyecto utilize Typescript lo mas posible, en especial cuando lidiamos con documentos que vienen de Sanity, tal vez podríamos aprovechar interfaces o Generics que Sanity nos ofrezca. No utilices "Sanity TypeGen", ya que es algo experimental.
-- Además del schema de "Noticia", quisiera otro schema para que el usuario pueda subir/modificar/eliminar Banners que serán vistos dentro de un carousel 
-en la página home del sitio web. Un banner tiene una imágen, una posición, un link (opcional), donde este link puede ser interno o externo. Los links externos se habren en una nueva pestaña.
-- Adicionalmente, nosotros queremos desplegar este proyecto en Netlify. La idea es minimizar costos ya que el cliente es una institución educativa con un presupuesto limitado. Para ello, decidimos que el sitio sera full SSG, salvo la parte del studio de sanity, donde ahi utilizaremos el rendering mode recomendado por el equipo de sanity.
-Dicho esto, el flujo de trabajo sería que el cliente (persona externa) hace todos los cambios que desea en el studio de sanity, y luego presiona un boton "Desplegar cambios", que cuando se presiona, Netlify se encargará de hacer un nuevo build completo del sitio web tomando la información más reciente de sanity.
+ITERATION 2.
