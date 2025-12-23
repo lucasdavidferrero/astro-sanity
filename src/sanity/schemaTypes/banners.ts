@@ -13,6 +13,7 @@ export const banner = defineType({
       validation: (Rule) => Rule.required().min(3).max(60),
     }),
     defineField({
+      /* https://www.sanity.io/recipes/schema-validation-rules-to-enforce-maximum-file-size-b918f5c8 */
       name: 'imagen',
       title: 'Imagen del Banner',
       type: 'image',

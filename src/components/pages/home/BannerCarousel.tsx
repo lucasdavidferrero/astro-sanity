@@ -67,9 +67,9 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
             const openInNewTab = shouldOpenInNewTab(banner.link);
             const imageUrl = urlFor(banner.imagen).width(1920).height(600).url();
             const imageSrcSet = `
-              ${urlFor(banner.imagen).width(640).height(200).url()} 640w,
-              ${urlFor(banner.imagen).width(1024).height(320).url()} 1024w,
-              ${urlFor(banner.imagen).width(1920).height(600).url()} 1920w
+              ${urlFor(banner.imagen).width(640).height(200).format('webp').url()} 640w,
+              ${urlFor(banner.imagen).width(1024).height(320).format('webp').url()} 1024w,
+              ${urlFor(banner.imagen).width(1920).height(600).format('webp').url()} 1920w
             `;
 
             return (
