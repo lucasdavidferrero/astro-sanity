@@ -1,5 +1,7 @@
 ---
-import './../styles/global.css'
+import './../styles/global.css';
+
+import MegaMenu from './../components/ui/MegaMenu.astro';
 ---
 <!doctype html>
 <html lang="en">
@@ -11,6 +13,8 @@ import './../styles/global.css'
 		<title>Astro Basics</title>
 	</head>
 	<body>
+		<MegaMenu />
 		<slot />
+		<script src="flowbite/dist/flowbite.min.js"></script>
 	</body>
 </html>
