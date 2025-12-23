@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import BannerCarousel from '../components/BannerCarousel.astro';
+import { BannerCarousel } from '@/components/pages/home/BannerCarousel';
 import { client } from '../lib/sanity';
 import { HOMEPAGE_QUERY } from '../lib/sanity.queries';
 import type { BannerPopulated, NoticiaListItem } from '../types/sanity.types';
@@ -20,49 +20,50 @@ const { banners, noticias } = data;
 ---
 
 <Layout title="Inicio - Institución Educativa">
-  <main class="homepage">
-
-    <div>
-   
-    </div>
-
-
+  <main class="min-h-screen">
+    
     <!-- Carousel de Banners -->
-    <!--{banners.length > 0 && (
-      <section class="banner-section">
-        <BannerCarousel banners={banners} />
+    {banners.length > 0 && (
+      <section class="mb-16">
+        <BannerCarousel banners={banners} client:load />
       </section>
-    )}-->
+    )}
 
     <!-- Sección de Últimas Noticias -->
-    <section class="noticias-section">
-      <div class="container">
-        <h2 class="section-title">Últimas Noticias</h2>
+    <section class="py-12 md:py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-gray-900"> Últimas Noticias </h2>
         
         {noticias.length === 0 ? (
-          <p class="no-content">No hay noticias publicadas aún.</p>
+          <p class="text-center text-gray-600 text-lg py-12">
+            No hay noticias publicadas aún.
+          </p>
         ) : (
-          <div class="noticias-grid">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12">
             {noticias.map((noticia) => (
-              <article class="noticia-card">
-                <a href={`/noticias/${noticia.slug.current}`}>
+              <article class="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 group">
+                <a href={`/noticias/${noticia.slug.current}`} class="block">
                   {noticia.portada && (
-                    <div class="noticia-image">
+                    <div class="aspect-[3/2] overflow-hidden bg-gray-100">
                       <img
                         src={urlFor(noticia.portada).width(600).height(400).url()}
                         srcset={`
                           ${urlFor(noticia.portada).width(300).height(200).url()} 300w,
                           ${urlFor(noticia.portada).width(600).height(400).url()} 600w
                         `}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         alt={noticia.portada.alt || noticia.titulo}
                         loading="lazy"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                   )}
                   
-                  <div class="noticia-content">
-                    <time datetime={noticia.fechaPublicacion} class="noticia-date">
+                  <div class="p-6">
+                    <time 
+                      datetime={noticia.fechaPublicacion} 
+                      class="block text-sm text-gray-500 mb-3"
+                    >
                       {new Date(noticia.fechaPublicacion).toLocaleDateString('es-ES', {
                         year: 'numeric',
                         month: 'long',
@@ -70,9 +71,13 @@ const { banners, noticias } = data;
                       })}
                     </time>
                     
-                    <h3 class="noticia-title">{noticia.titulo}</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-900 line-clamp-2 leading-tight">
+                      {noticia.titulo}
+                    </h3>
                     
-                    <span class="read-more">Leer más →</span>
+                    <span class="inline-block text-blue-600 font-medium text-[15px] group-hover:underline">
+                      Leer más →
+                    </span>
                   </div>
                 </a>
               </article>
@@ -81,8 +86,12 @@ const { banners, noticias } = data;
         )}
 
         {noticias.length > 0 && (
-          <div class="view-all">
-            <a href="/noticias" class="btn-primary">
+          <div class="text-center mt-8">
+            <a 
+              href="/noticias" 
+              class="inline-block px-8 py-3.5 bg-blue-600 text-white rounded-lg font-semibold 
+                     hover:bg-blue-700 transition-colors duration-200
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
               Ver Todas las Noticias
             </a>
           </div>
@@ -91,147 +100,3 @@ const { banners, noticias } = data;
     </section>
   </main>
 </Layout>
-
-<style>
-  .homepage {
-    min-height: 100vh;
-  }
-
-  .banner-section {
-    margin-bottom: 4rem;
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
-
-  .section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 3rem;
-    color: #1f2937;
-  }
-
-  .no-content {
-    text-align: center;
-    color: #6b7280;
-    font-size: 1.125rem;
-    padding: 3rem 0;
-  }
-
-  /* Grid de Noticias */
-  .noticias-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
-  }
-
-  .noticia-card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-
-  .noticia-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-  }
-
-  .noticia-card a {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-  }
-
-  .noticia-image {
-    width: 100%;
-    aspect-ratio: 3 / 2;
-    overflow: hidden;
-    background: #f3f4f6;
-  }
-
-  .noticia-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-  }
-
-  .noticia-card:hover .noticia-image img {
-    transform: scale(1.05);
-  }
-
-  .noticia-content {
-    padding: 1.5rem;
-  }
-
-  .noticia-date {
-    display: block;
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 0.75rem;
-  }
-
-  .noticia-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 0.75rem 0;
-    color: #1f2937;
-    line-height: 1.4;
-  }
-
-  .read-more {
-    display: inline-block;
-    color: #2563eb;
-    font-weight: 500;
-    font-size: 0.9375rem;
-  }
-
-  .noticia-card:hover .read-more {
-    text-decoration: underline;
-  }
-
-  /* Botón Ver Todas */
-  .view-all {
-    text-align: center;
-    margin-top: 2rem;
-  }
-
-  .btn-primary {
-    display: inline-block;
-    padding: 0.875rem 2rem;
-    background: #2563eb;
-    color: white;
-    border-radius: 8px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background 0.3s;
-  }
-
-  .btn-primary:hover {
-    background: #1d4ed8;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .section-title {
-      font-size: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .noticias-grid {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-
-    .banner-section {
-      margin-bottom: 2rem;
-    }
-  }
-</style>

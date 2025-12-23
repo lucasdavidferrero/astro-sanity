@@ -20,6 +20,8 @@
     "@types/react-dom": "^19.2.3",
     "astro": "^5.16.6",
     "astro-portabletext": "^0.12.0",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "flowbite": "^4.0.1",
     "groq": "^5.0.1",
     "react": "^19.2.3",
