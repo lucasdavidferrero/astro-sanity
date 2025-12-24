@@ -1,0 +1,38 @@
+---
+import type { MarkProps } from "astro-portabletext/types";
+
+// Usamos el tipo Mark que ya incluye la estructura de markDef
+export type Props = MarkProps;
+
+
+const { node } = Astro.props;
+
+// Según tu log, la URL está en node.markDef.href
+const href = node.markDef?.href;
+
+// 1. Obtenemos el dominio actual (puedes usar una variable de entorno o Astro.url)
+const siteDomain = import.meta.env.SITE_DOMAIN;
+console.log(siteDomain)
+
+// 2. Lógica de comprobación
+let isExternal = false;
+
+try {
+  const url = new URL(href);
+  // Es externo si el hostname no incluye nuestro dominio
+  isExternal = !url.hostname.includes(siteDomain);
+} catch (e) {
+  // Si falla (ej. mailto: o tel:), no lo marcamos como externo para target="_blank"
+  isExternal = false;
+}
+
+// https://github.dev/theisel/astro-portabletext
+---
+<a 
+  href={href} 
+  target={isExternal ? "_blank" : "_self"}
+  rel={isExternal ? "noopener noreferrer" : undefined}
+  class="text-blue-600 underline hover:text-blue-800 transition-colors"
+>
+  <slot />
+</a>

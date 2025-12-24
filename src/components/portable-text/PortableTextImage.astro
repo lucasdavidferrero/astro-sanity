@@ -1,0 +1,43 @@
+---
+import { urlFor } from '@/utils/sanity.utils';
+
+// Definimos la interfaz del objeto que viene de Sanity
+interface SanityImageNode {
+  _type: 'image';
+  asset: {
+    _ref?: string;
+    _id?: string;
+    [key: string]: any; // Para aceptar metadatos extras del asset->
+  };
+  alt?: string;
+  caption?: string;
+}
+
+// Definimos la interfaz de las Props que recibe el componente desde astro-portabletext
+interface Props {
+  node: SanityImageNode;
+  index?: number;
+  isInline?: boolean;
+}
+
+const { node } = Astro.props;
+
+// Validación robusta
+const hasAsset = node && node.asset;
+---
+
+{hasAsset ? (
+  <figure class="my-8 group">
+    <img 
+      src={urlFor(node).width(1000).auto('format').url()}
+      alt={node.alt || 'Imagen de la noticia'}
+      loading="lazy"
+      class="rounded-lg shadow-md w-full h-auto transition-transform duration-300 group-hover:scale-[1.01]"
+    />
+    {node.caption && (
+      <figcaption class="mt-3 text-center text-sm text-gray-500 italic font-medium">
+        {node.caption}
+      </figcaption>
+    )}
+  </figure>
+) : null}

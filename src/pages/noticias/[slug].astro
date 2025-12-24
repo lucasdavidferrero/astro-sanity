@@ -5,6 +5,8 @@ import { NOTICIA_DETALLE_QUERY, NOTICIAS_SLUGS_QUERY } from '../../lib/sanity.qu
 import type { Noticia, SlugParam } from '../../types/sanity.types';
 import { urlFor } from '../../utils/sanity.utils';
 import { PortableText } from 'astro-portabletext';
+import PortableTextImage from '@/components/portable-text/PortableTextImage.astro'
+import PortableTextLink from '@/components/portable-text/PortableTextLink.astro'
 
 // Renderizado estático en build time
 export const prerender = true;
@@ -96,32 +98,10 @@ const fechaFormateada = new Date(noticia.fechaPublicacion).toLocaleDateString('e
           value={noticia.contenido}
           components={{
             type: {
-              image: ({ value }) => {
-                const imageUrl = urlFor(value).width(800).url();
-                return `
-                  <figure class="my-8">
-                    <img 
-                      src="${imageUrl}"
-                      alt="${value.alt || ''}"
-                      loading="lazy"
-                      class="rounded-lg"
-                    />
-                  </figure>
-                `;
-              },
+              image: PortableTextImage
             },
-            marks: {
-              link: ({ children, value }) => {
-                const rel = value.href.startsWith('http') 
-                  ? 'noopener noreferrer' 
-                  : undefined;
-                const target = value.href.startsWith('http') 
-                  ? '_blank' 
-                  : undefined;
-                const relAttr = rel ? `rel="${rel}"` : '';
-                const targetAttr = target ? `target="${target}"` : '';
-                return `<a href="${value.href}" ${relAttr} ${targetAttr}>${children}</a>`;
-              },
+            mark: {
+              link: PortableTextLink
             },
           }}
         />
@@ -134,8 +114,7 @@ const fechaFormateada = new Date(noticia.fechaPublicacion).toLocaleDateString('e
           class="inline-block px-8 py-3.5 bg-white text-blue-600 
                  border-2 border-blue-600 rounded-lg font-semibold 
                  hover:bg-blue-600 hover:text-white transition-all duration-200
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
           Ver Todas las Noticias
         </a>
       </footer>

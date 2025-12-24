@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_SANITY_API_VERSION: string;
   readonly PUBLIC_NETLIFY_BUILD_HOOK: string;
   readonly PUBLIC_SITE_URL: string;
-  
+  readonly SITE_DOMAIN: string;
   // more env variables...
 }
 
