@@ -31,6 +31,31 @@ export const noticia = defineType({
     }),
 
     defineField({
+      name: 'categoria',
+      title: 'Categoría',
+      type: 'string',
+      initialValue: 'comunicado', // Sets a default value
+      options: {
+      list: [
+        { title: 'Comunicado', value: 'comunicado' },
+        { title: 'Académico', value: 'academico' },
+        { title: 'Evento', value: 'evento' },
+        { title: 'Sin categoría', value: 'sin-categoria' },
+      ],
+      layout: 'dropdown', // Can also be 'radio' if you prefer
+    },
+      validation: (Rule) => Rule.required(),
+    }),
+
+    defineField({
+      name: 'destacada',
+      title: '¿Noticia Destacada?',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Si se activa, esta noticia será destacada',
+    }),
+
+    defineField({
       name: 'fechaPublicacion',
       title: 'Fecha de Publicación',
       type: 'datetime',
@@ -81,6 +106,7 @@ export const noticia = defineType({
               { title: 'Negrita', value: 'strong' },
               { title: 'Cursiva', value: 'em' },
               { title: 'Subrayado', value: 'underline' },
+              { title: 'Resaltado', value: 'highlight' }
             ],
             annotations: [
               {
@@ -122,25 +148,35 @@ export const noticia = defineType({
       ],
       validation: (Rule) => Rule.required(),
     }),
-    /*defineField({
-      name: 'publicada',
-      title: '¿Publicada?',
-      type: 'boolean',
-      description: 'Solo las noticias publicadas aparecerán en el sitio',
-      initialValue: true,
-    }),*/
+    defineField({
+      name: 'adjuntos',
+      title: 'Archivos Adjuntos',
+      type: 'array',
+      of: [
+        {
+          type: 'file',
+          fields: [
+            {
+              name: 'description',
+              type: 'string',
+              title: 'Descripción del archivo (ej: Formulario de Inscripción)',
+            },
+          ],
+        },
+      ],
+    }),
   ],
   preview: {
     select: {
       title: 'titulo',
       media: 'portada',
       fecha: 'fechaPublicacion',
-      // publicada: 'publicada',
+      cat: 'categoria',
     },
-    prepare({ title, media, fecha, /* publicada */ }) {
+    prepare({ title, media, fecha }) {
       return {
         title,
-        subtitle: `${new Date(fecha).toLocaleDateString('es-ES')} ${ true ? '✅' : '⏸️'}`,
+        subtitle: `${new Date(fecha).toLocaleDateString('es-AR')} ${cat ? cat.toUpperCase() : 'SIN CATEGORÍA'}`,
         media,
       };
     },
