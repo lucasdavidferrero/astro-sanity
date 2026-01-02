@@ -9,8 +9,7 @@ import {
   Text, 
   Stack, 
   Flex,
-  Card,
-  BoundaryElementProvider 
+  Card
 } from '@sanity/ui';
 
 interface NetlifyDeployConfig {
@@ -56,6 +55,7 @@ export const netlifyDeploy = definePlugin<NetlifyDeployConfig>((config) => {
     },
   };
 });
+
 function CustomToolMenu(props: ToolMenuProps) {
   const user = useCurrentUser()
   const {activeToolName, context, tools} = props
@@ -115,7 +115,7 @@ function DeployButton({ config }: { config: NetlifyDeployConfig }) {
       toast.push({
         status: 'error',
         title: 'Error de conexión',
-        description: 'No se pudo contactar con Netlify.',
+        description: 'No se pudo contactar con Netlifyyy.',
       });
     } finally {
       setIsDeploying(false);
