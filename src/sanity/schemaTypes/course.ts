@@ -44,6 +44,15 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'videoIntroduccion',
+      title: 'Video de Presentación (YouTube)',
+      type: 'url',
+      description: 'Pega el enlace completo del video de YouTube (opcional).',
+      validation: (Rule) => Rule.uri({
+        scheme: ['http', 'https']
+      })
+    }),
+    defineField({
       name: 'fechaInicio',
       title: 'Fecha de Inicio',
       type: 'datetime',
