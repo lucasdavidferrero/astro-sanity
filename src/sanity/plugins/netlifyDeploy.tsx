@@ -1,7 +1,17 @@
-import { definePlugin } from 'sanity';
-import { RocketIcon } from '@sanity/icons';
-import React, { useState } from 'react';
-import { Card, Stack, Button, Text, Box, useToast } from '@sanity/ui';
+import { definePlugin, type ToolMenuProps, ToolLink, useCurrentUser } from 'sanity';
+import { PublishIcon, WarningOutlineIcon, PlugIcon } from '@sanity/icons';
+import React, { useState, useCallback } from 'react';
+import { 
+  Button, 
+  useToast, 
+  Dialog, 
+  Box, 
+  Text, 
+  Stack, 
+  Flex,
+  Card,
+  BoundaryElementProvider 
+} from '@sanity/ui';
 
 interface NetlifyDeployConfig {
   buildHookUrl: string;
@@ -25,63 +35,87 @@ interface NetlifyDeployConfig {
  * })
  * ```
  */
+
+
 export const netlifyDeploy = definePlugin<NetlifyDeployConfig>((config) => {
   return {
     name: 'netlify-deploy',
     studio: {
       components: {
-        toolMenu: () => <DeployButton config={config} />,
+        toolMenu: (props) => {
+          return (
+            <>
+            <Flex gap={2}>
+              <CustomToolMenu {...props} />
+              <DeployButton config={config} />
+            </Flex>
+            </>
+          )
+        },
       },
     },
   };
 });
+function CustomToolMenu(props: ToolMenuProps) {
+  const user = useCurrentUser()
+  const {activeToolName, context, tools} = props
+  const isAdmin = user?.roles.some(r => r.name === 'administrator')
+
+  // Filter the tools array before passing it to the default renderer
+  const filteredTools = tools.filter((tool) => {
+    if (tool.name === 'vision' && !isAdmin) return false
+    return true
+  })
+
+  const isSidebar = context === 'sidebar'
+	// Change flex direction depending on context
+	const direction = isSidebar ? 'column' : 'row'
+  return (
+    <Flex gap={1} direction={direction}>
+      {filteredTools.map((tool) => (
+        <Button
+          as={ToolLink}
+          icon={tool.icon || PlugIcon}
+          key={tool.name}
+          name={tool.name}
+          padding={2}
+          selected={tool.name === activeToolName}
+          text={tool.title || tool.name}
+          mode="bleed"
+          tone="primary"
+        />
+      ))}
+    </Flex>
+  )
+}
 
 function DeployButton({ config }: { config: NetlifyDeployConfig }) {
+  const [open, setOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const toast = useToast();
 
+  const handleClose = useCallback(() => setOpen(false), []);
+  const handleOpen = useCallback(() => setOpen(true), []);
+
   const handleDeploy = async () => {
-    if (isDeploying) return;
-
-    const confirmed = window.confirm(
-      '🚀 PUBLICAR CAMBIOS EN EL SITIO WEB\n\n' +
-      '¿Qué significa esto?\n' +
-      '• Se regenerará el sitio web completo con TODOS los cambios realizados en el CMS\n' +
-      '• Los visitantes del sitio verán el contenido actualizado\n' +
-      '• Este proceso tarda entre 2-5 minutos\n\n' +
-      '⚠️ Importante:\n' +
-      '• Asegúrate de haber revisado todo el contenido antes de publicar\n' +
-      '• Los cambios serán visibles para todos los usuarios\n\n' +
-      '¿Deseas continuar con la publicación?'
-    );
-
-    if (!confirmed) return;
-
     setIsDeploying(true);
-
     try {
-      const response = await fetch(config.buildHookUrl, {
-        method: 'POST',
+      const response = await fetch(config.buildHookUrl, { method: 'POST' });
+
+      if (!response.ok) throw new Error(`Error ${response.status}`);
+
+      toast.push({
+        status: 'success',
+        title: 'Despliegue iniciado',
+        description: `El sitio ${config.siteName || ''} se está actualizando.`,
       });
-
-      if (response.ok) {
-        toast.push({
-          status: 'success',
-          title: '¡Deploy iniciado exitosamente!',
-          description: 'El sitio se está regenerando. Los cambios estarán visibles en 2-5 minutos.',
-          duration: 7000,
-        });
-
-        localStorage.setItem('lastNetlifyDeploy', new Date().toISOString());
-      } else {
-        throw new Error(`Error ${response.status}`);
-      }
+      
+      setOpen(false);
     } catch (error) {
       toast.push({
         status: 'error',
-        title: 'Error al iniciar el despliegue',
-        description: 'No se pudo conectar con el servidor. Por favor, contacta al administrador técnico.',
-        duration: 7000,
+        title: 'Error de conexión',
+        description: 'No se pudo contactar con Netlify.',
       });
     } finally {
       setIsDeploying(false);
@@ -89,61 +123,84 @@ function DeployButton({ config }: { config: NetlifyDeployConfig }) {
   };
 
   return (
-    <Button
-      text="🚀 Publicar"
-      tone="primary"
-      onClick={handleDeploy}
-      disabled={isDeploying}
-      loading={isDeploying}
-      fontSize={1}
-      padding={2}
-    />
+    <>
+      <Button
+        fontSize={1}
+        padding={2}
+        text="Publicar Sitio"
+        icon={PublishIcon}
+        tone="positive"
+        mode="bleed"
+        onClick={handleOpen}
+      />
+
+      {open && (
+        <Dialog
+          header="Confirmar Publicación"
+          id="deploy-dialog"
+          onClose={handleClose}
+          zOffset={1000}
+          width={1} // Small width for confirmation
+          footer={
+            <Box padding={3}>
+              <Grid columns={2} gap={2}>
+                <Button 
+                  mode="ghost" 
+                  text="Cancelar" 
+                  onClick={handleClose} 
+                />
+                <Button
+                  text={isDeploying ? 'Publicando...' : 'Sí, publicar ahora'}
+                  tone="positive"
+                  onClick={handleDeploy}
+                  loading={isDeploying}
+                  disabled={isDeploying}
+                />
+              </Grid>
+            </Box>
+          }
+        >
+          <Box padding={4}>
+            <Stack space={4}>
+              <Flex align="center" gap={3}>
+                <Text size={4} muted><PublishIcon /></Text>
+                <Text weight="semibold" size={2}>
+                  ¿Estás seguro de actualizar el sitio web por completo?
+                </Text>
+              </Flex>
+              
+              <Card padding={3} tone="caution" border radius={2}>
+                <Stack space={3}>
+                  <Flex gap={2} align="center">
+                    <WarningOutlineIcon />
+                    <Text size={1} weight="bold">Aviso importante</Text>
+                  </Flex>
+                  <Text size={1}>
+                    • Se regenerará el sitio completo con los cambios actuales.<br/>
+                    • El proceso tarda de 2 a 8 minutos.<br/>
+                    • No se recomienda ejecutar este proceso de forma recurrente en lapsos de tiempos cortos.
+                  </Text>
+                </Stack>
+              </Card>
+              <Text size={1} muted>
+                La regeneración del sitio completo implica compilar todo el sitio web con la nueva información y desplegar al hosting toda las páginas web generadas.
+              </Text>
+              <Text size={1} muted>
+                Asegúrate de haber guardado y revisado todos tus documentos antes de proceder.
+              </Text>
+            </Stack>
+          </Box>
+        </Dialog>
+      )}
+    </>
   );
 }
 
-// ============================================
-// ACCIÓN PERSONALIZADA (ALTERNATIVA)
-// ============================================
-
-/**
- * Si prefieres una acción en el menú contextual de documentos:
- */
-export const deployAction = definePlugin<NetlifyDeployConfig>((config) => {
-  return {
-    name: 'netlify-deploy-action',
-    document: {
-      actions: (prev, context) => {
-        return [
-          ...prev,
-          {
-            label: 'Publicar en el sitio',
-            icon: RocketIcon,
-            onHandle: async () => {
-              const confirmed = window.confirm(
-                '¿Publicar este contenido en el sitio web?\n\n' +
-                'Esto regenerará el sitio completo.'
-              );
-
-              if (!confirmed) return;
-
-              try {
-                const response = await fetch(config.buildHookUrl, {
-                  method: 'POST',
-                });
-
-                if (response.ok) {
-                  alert('¡Deploy iniciado! Los cambios estarán visibles en 2-5 minutos.');
-                } else {
-                  throw new Error('Error al desplegar');
-                }
-              } catch (error) {
-                alert('Error al iniciar el deploy. Contacta al administrador.');
-                console.error(error);
-              }
-            },
-          },
-        ];
-      },
-    },
-  };
-});
+// Helper to handle the footer buttons layout
+function Grid({ children, columns, gap }: { children: React.ReactNode, columns: number, gap: number }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: `${gap * 4}px` }}>
+      {children}
+    </div>
+  );
+}

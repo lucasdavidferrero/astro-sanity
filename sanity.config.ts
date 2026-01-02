@@ -24,6 +24,24 @@ export default defineConfig({
     types: [noticia, banner],
   },
 
+  // This function controls which tools are active based on the user
+  tools: (prev, context) => {
+    const {currentUser} = context
+
+    // Check if the user has the 'administrator' role
+    const isAdmin = currentUser?.roles.some(
+      (role) => role.name === 'administrator'
+    )
+
+    if (isAdmin) {
+      // Admins see everything (Structure + Vision)
+      return prev
+    }
+
+    // Everyone else: filter out everything except the 'structure' tool
+    return prev.filter((tool) => tool.name === 'structure')
+  },
+
   // Configuración de la UI del Studio
   title: 'CMS - Sitio Educativo',
 

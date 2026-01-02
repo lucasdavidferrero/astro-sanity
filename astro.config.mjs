@@ -11,19 +11,24 @@ export default defineConfig({
   output: 'static',
   adapter: netlify(),
 
-  integrations: [sanity({
+  integrations: [
+    react(),
+    sanity({
     projectId: 'kqzxfqcl',
     dataset: 'production',
     useCdn: false,
     apiVersion: '2025-12-19',
-    studioBasePath: '/studio'
-  }), react()],
+    studioBasePath: '/studio',
+  })],
 
   vite: {
     plugins: [tailwindcss()]
   }
 });
 
-/* 
-https://developers.netlify.com/guides/how-to-use-sanity-cms-with-astro/#buildwebhooks
+/*
+
+  https://developers.netlify.com/guides/how-to-use-sanity-cms-with-astro/#buildwebhooks
+
+  https://www.sanity.io/docs/developer-guides/an-opinionated-guide-to-sanity-studio#ebbba4ecc31f
 */
