@@ -31,23 +31,6 @@ export const noticia = defineType({
     }),
 
     defineField({
-      name: 'categoria',
-      title: 'Categoría',
-      type: 'string',
-      initialValue: 'comunicado', // Sets a default value
-      options: {
-      list: [
-        { title: 'Comunicado', value: 'comunicado' },
-        { title: 'Académico', value: 'academico' },
-        { title: 'Evento', value: 'evento' },
-        { title: 'Sin categoría', value: 'sin-categoria' },
-      ],
-      layout: 'dropdown', // Can also be 'radio' if you prefer
-    },
-      validation: (Rule) => Rule.required(),
-    }),
-
-    defineField({
       name: 'destacada',
       title: '¿Noticia Destacada?',
       type: 'boolean',
@@ -76,12 +59,7 @@ export const noticia = defineType({
           title: 'Texto Alternativo',
           type: 'string',
           validation: (Rule) => Rule.required(),
-        },
-        {
-          name: 'caption',
-          title: 'Pie de foto (opcional)',
-          type: 'string',
-        },
+        }
       ],
     }),
     defineField({
@@ -171,12 +149,11 @@ export const noticia = defineType({
       title: 'titulo',
       media: 'portada',
       fecha: 'fechaPublicacion',
-      cat: 'categoria',
     },
     prepare({ title, media, fecha }) {
       return {
         title,
-        subtitle: `${new Date(fecha).toLocaleDateString('es-AR')} ${cat ? cat.toUpperCase() : 'SIN CATEGORÍA'}`,
+        subtitle: `${new Date(fecha).toLocaleDateString('es-AR')}`,
         media,
       };
     },

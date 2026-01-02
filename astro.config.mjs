@@ -27,7 +27,6 @@ export default defineConfig({
 });
 
 /*
-
   https://developers.netlify.com/guides/how-to-use-sanity-cms-with-astro/#buildwebhooks
 
   https://www.sanity.io/docs/developer-guides/an-opinionated-guide-to-sanity-studio#ebbba4ecc31f

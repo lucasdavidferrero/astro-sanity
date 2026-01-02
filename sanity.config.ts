@@ -1,10 +1,9 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
-import { noticia } from "./src/sanity/schemaTypes/noticia";
-
 import { visionTool } from "@sanity/vision";
-import { banner } from "./src/sanity/schemaTypes/banners";
 import { netlifyDeploy } from "./src/sanity/plugins/netlifyDeploy";
+import { noticia } from "./src/sanity/schemaTypes/noticia";
+import { banner } from "./src/sanity/schemaTypes/banners";
 
 
 export default defineConfig({
@@ -33,8 +32,7 @@ export default defineConfig({
       (role) => role.name === 'administrator'
     )
 
-    if (isAdmin) {
-      // Admins see everything (Structure + Vision)
+    if (isAdmin) { // Admins see everything (Structure + Vision)
       return prev
     }
 
@@ -67,6 +65,5 @@ export default defineConfig({
       }
       return prev;
     },
-
 
 });

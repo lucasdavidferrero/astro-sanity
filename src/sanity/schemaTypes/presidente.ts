@@ -51,20 +51,13 @@ export const presidente = defineType({
       options: {
         hotspot: true,
       },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Texto Alternativo',
-          type: 'string',
-        },
-      ],
     }),
     defineField({
       name: 'biografia',
       title: 'Biografía Breve / Información',
       type: 'text',
       rows: 5,
-      description: 'Un pequeño resumen sobre su trayectoria o aportes.',
+      description: 'Un pequeño resumen sobre su trayectoria y/o aportes.',
     }),
   ],
   preview: {
@@ -82,4 +75,11 @@ export const presidente = defineType({
       };
     },
   },
+  orderings: [
+    {
+      title: 'Por período (Más reciente)',
+      name: 'periodoDesc',
+      by: [{ field: 'periodo.añoDesde', direction: 'desc' }],
+    },
+  ],
 });
